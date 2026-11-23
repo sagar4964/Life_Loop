@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'login_page.dart';
+import 'create_page.dart';
 
 void main() {
   runApp(const LifeLoopApp());
@@ -20,7 +20,7 @@ class LifeLoopApp extends StatelessWidget {
         ),
         scaffoldBackgroundColor: const Color(0xFFFAF7F2),
       ),
-      home: const LoginPage(),
+      home: const CreatePage(),
     );
   }
 }
