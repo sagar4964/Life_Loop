@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'edit_profile.dart';
+import 'activity_list_page.dart';
+import 'login_page.dart';
 
 class ProfilePage extends StatefulWidget {
   final String fullName;
@@ -21,11 +23,11 @@ class _ProfilePageState extends State<ProfilePage> {
       'I love exploring new places, learning new skills, and creating memorable experiences with friends.';
   List<String> _interests = ['Hiking', 'Photography', 'Music', 'Traveling'];
 
-  // Statistics (all zero for now, never changed by editing)
-  final int _activitiesCreated = 0;
-  final int _activitiesJoined = 0;
-  final int _activitiesCompleted = 0;
-  final int _ongoingActivities = 0;
+  // Statistics (interactive numbers)
+  final int _activitiesCreated = 3;
+  final int _activitiesJoined = 5;
+  final int _activitiesCompleted = 2;
+  final int _ongoingActivities = 1;
 
   Future<void> _openEditor() async {
     final result = await showModalBottomSheet<ProfileEdits>(
@@ -39,13 +41,49 @@ class _ProfilePageState extends State<ProfilePage> {
       ),
     );
 
+    if (!mounted) return;
+
     // result is null when the user pressed Cancel
     if (result != null) {
       setState(() {
         _bio = result.bio;
         _interests = result.interests;
       });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Profile updated successfully!')),
+      );
     }
+  }
+
+  void _logout() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFFFAF7F2),
+        title: const Text('Log Out', style: TextStyle(color: Color(0xFF1B5E20))),
+        content: const Text('Are you sure you want to log out of LifeLoop?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
+          ),
+          FilledButton(
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(builder: (context) => const LoginPage()),
+                (route) => false,
+              );
+            },
+            style: FilledButton.styleFrom(
+              backgroundColor: const Color(0xFF1B5E20),
+            ),
+            child: const Text('Log Out'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -54,13 +92,21 @@ class _ProfilePageState extends State<ProfilePage> {
     const lime = Color(0xFFE9F7C6);
 
     return Scaffold(
+      backgroundColor: const Color(0xFFFAF7F2),
       appBar: AppBar(
         title: const Text(
-          'LifeLoop',
+          'LifeLoop Profile',
           style: TextStyle(color: green, fontWeight: FontWeight.bold),
         ),
         backgroundColor: const Color(0xFFFAF7F2),
         elevation: 0,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout_rounded, color: green),
+            tooltip: 'Log Out',
+            onPressed: _logout,
+          ),
+        ],
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -180,21 +226,65 @@ class _ProfilePageState extends State<ProfilePage> {
                       icon: Icons.add_circle_outline,
                       value: _activitiesCreated,
                       label: 'Activities Created',
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const ActivityListPage(
+                              categoryTitle: 'Activities Created',
+                              count: 3,
+                            ),
+                          ),
+                        );
+                      },
                     ),
                     _StatCard(
                       icon: Icons.group_outlined,
                       value: _activitiesJoined,
                       label: 'Activities Joined',
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const ActivityListPage(
+                              categoryTitle: 'Activities Joined',
+                              count: 5,
+                            ),
+                          ),
+                        );
+                      },
                     ),
                     _StatCard(
                       icon: Icons.check_circle_outline,
                       value: _activitiesCompleted,
                       label: 'Activities Completed',
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const ActivityListPage(
+                              categoryTitle: 'Activities Completed',
+                              count: 2,
+                            ),
+                          ),
+                        );
+                      },
                     ),
                     _StatCard(
                       icon: Icons.timelapse,
                       value: _ongoingActivities,
                       label: 'Ongoing Activities',
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const ActivityListPage(
+                              categoryTitle: 'Ongoing Activities',
+                              count: 1,
+                            ),
+                          ),
+                        );
+                      },
                     ),
                   ],
                 ),
@@ -208,16 +298,18 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 }
 
-// A small reusable widget for one clickable statistics card
+// A reusable widget for one clickable statistics card
 class _StatCard extends StatelessWidget {
   final IconData icon;
   final int value;
   final String label;
+  final VoidCallback onTap;
 
   const _StatCard({
     required this.icon,
     required this.value,
     required this.label,
+    required this.onTap,
   });
 
   @override
@@ -230,11 +322,7 @@ class _StatCard extends StatelessWidget {
       borderRadius: BorderRadius.circular(16),
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
-        onTap: () {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('$label: $value')),
-          );
-        },
+        onTap: onTap,
         child: Container(
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
