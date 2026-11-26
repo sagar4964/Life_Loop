@@ -1,6 +1,6 @@
 {
-    "name": "life_loop",
-    "short_name": "life_loop",
+    "name": "lifeloops",
+    "short_name": "lifeloops",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
