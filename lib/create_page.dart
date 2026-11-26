@@ -1,6 +1,13 @@
 import 'package:flutter/material.dart';
-import 'profile_page.dart';
+import 'view/profile/profile_screen.dart';
+import 'features/posts/screens/posts_preview_page.dart';
+import 'features/posts/screens/create_post_page.dart';
+import 'features/posts/posts_controller.dart';
+import 'features/posts/data/post_storage.dart';
+import 'features/posts/services/post_sharer.dart';
+import 'features/posts/models/post.dart';
 import 'models/post_model.dart';
+import 'login_page.dart';
 
 class CreatePage extends StatefulWidget {
   const CreatePage({super.key});
@@ -12,14 +19,21 @@ class CreatePage extends StatefulWidget {
 class _CreatePageState extends State<CreatePage> {
   final _captionController = TextEditingController();
   bool _hasPhoto = false;
+  bool _isPhotoPost = true; // Default choice
+
+  final _postsController = PostsController(
+    storage: const AndroidPostStorage(),
+    currentUser: const PostAuthor(id: 'u1', name: 'Ananya Sharma'),
+  );
 
   @override
   void dispose() {
     _captionController.dispose();
+    _postsController.dispose();
     super.dispose();
   }
 
-  void _publishPost() {
+  void _publishPhotoPost() {
     if (_captionController.text.trim().isEmpty && !_hasPhoto) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please add a photo or caption before publishing.')),
@@ -35,6 +49,21 @@ class _CreatePageState extends State<CreatePage> {
     _captionController.clear();
     setState(() {
       _hasPhoto = false;
+    });
+  }
+
+  void _openTextPostComposer() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => CreatePostPage(controller: _postsController),
+      ),
+    ).then((_) {
+      if (mounted) {
+        setState(() {
+          _isPhotoPost = true; // reset back to photo post view
+        });
+      }
     });
   }
 
@@ -70,6 +99,16 @@ class _CreatePageState extends State<CreatePage> {
           ],
         ),
         actions: [
+          TextButton.icon(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const LoginPage()),
+              );
+            },
+            icon: const Icon(Icons.login, size: 16, color: green),
+            label: const Text('Log In', style: TextStyle(color: green, fontWeight: FontWeight.bold)),
+          ),
           Padding(
             padding: const EdgeInsets.only(right: 16.0),
             child: TextButton.icon(
@@ -77,10 +116,7 @@ class _CreatePageState extends State<CreatePage> {
                 Navigator.pushReplacement(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => const ProfilePage(
-                      fullName: 'Ananya Sharma',
-                      username: '@ananya',
-                    ),
+                    builder: (context) => const ProfileScreen(),
                   ),
                 );
               },
@@ -101,6 +137,45 @@ class _CreatePageState extends State<CreatePage> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               const SizedBox(height: 10),
+              // Two clearly labeled choices at the top: Photo Post and Text Post
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  ChoiceChip(
+                    label: const Text('Photo Post'),
+                    selected: _isPhotoPost,
+                    onSelected: (selected) {
+                      if (selected) {
+                        setState(() => _isPhotoPost = true);
+                      }
+                    },
+                    selectedColor: lime,
+                    backgroundColor: Colors.white,
+                    labelStyle: TextStyle(
+                      color: _isPhotoPost ? green : Colors.black87,
+                      fontWeight: _isPhotoPost ? FontWeight.bold : FontWeight.normal,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  ChoiceChip(
+                    label: const Text('Text Post'),
+                    selected: !_isPhotoPost,
+                    onSelected: (selected) {
+                      if (selected) {
+                        setState(() => _isPhotoPost = false);
+                        _openTextPostComposer();
+                      }
+                    },
+                    selectedColor: lime,
+                    backgroundColor: Colors.white,
+                    labelStyle: TextStyle(
+                      color: !_isPhotoPost ? green : Colors.black87,
+                      fontWeight: !_isPhotoPost ? FontWeight.bold : FontWeight.normal,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
               Center(
                 child: Container(
                   padding: const EdgeInsets.all(16),
@@ -208,7 +283,7 @@ class _CreatePageState extends State<CreatePage> {
 
               // Publish Button
               FilledButton(
-                onPressed: _publishPost,
+                onPressed: _publishPhotoPost,
                 style: FilledButton.styleFrom(
                   backgroundColor: green,
                   padding: const EdgeInsets.symmetric(vertical: 16),
@@ -225,16 +300,26 @@ class _CreatePageState extends State<CreatePage> {
         ),
       ),
       bottomNavigationBar: BottomNavigationBar(
-        currentIndex: 0, // 0 for Create
+        currentIndex: 1, // 1 for Create
         onTap: (index) {
-          if (index == 1) {
+          if (index == 0) {
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(
-                builder: (context) => const ProfilePage(
-                  fullName: 'Ananya Sharma',
-                  username: '@ananya',
+                builder: (context) => PostsPreviewPage(
+                  controller: PostsController(
+                    storage: const AndroidPostStorage(),
+                    currentUser: const PostAuthor(id: 'u1', name: 'Ananya Sharma'),
+                  ),
+                  sharer: const AndroidPostSharer(),
                 ),
+              ),
+            );
+          } else if (index == 2) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const ProfileScreen(),
               ),
             );
           }
@@ -245,11 +330,17 @@ class _CreatePageState extends State<CreatePage> {
         unselectedItemColor: Colors.grey,
         items: const [
           BottomNavigationBarItem(
+            icon: Icon(Icons.feed_outlined),
+            activeIcon: Icon(Icons.feed),
+            label: 'Feed',
+          ),
+          BottomNavigationBarItem(
             icon: Icon(Icons.add_box_rounded),
             label: 'Create',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.person_outline),
+            activeIcon: Icon(Icons.person),
             label: 'Profile',
           ),
         ],

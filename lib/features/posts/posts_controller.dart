@@ -50,7 +50,7 @@ class PostsController extends ChangeNotifier {
     _notify();
     try {
       final contents = await storage.read();
-      if (contents == null) {
+      if (contents == null || contents.trim().isEmpty) {
         _posts = [];
       } else {
         final json = jsonDecode(contents) as Map<String, dynamic>;

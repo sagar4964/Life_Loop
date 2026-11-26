@@ -1,8 +1,16 @@
-
 import 'dart:io';
 
 import 'package:flutter/material.dart';
 import '../../edit_profile_screen.dart';
+import '../../post_history_page.dart';
+import '../../login_page.dart';
+import '../../create_page.dart';
+import '../../features/posts/screens/posts_preview_page.dart';
+import '../../features/posts/posts_controller.dart';
+import '../../features/posts/data/post_storage.dart';
+import '../../features/posts/services/post_sharer.dart';
+import '../../features/posts/models/post.dart';
+import '../../models/post_model.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -65,7 +73,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget buildMenuItem(IconData icon, String title) {
+  Widget buildMenuItem(IconData icon, String title, VoidCallback onTap) {
     return Card(
       elevation: 0,
       color: Colors.white,
@@ -80,19 +88,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
         leading: Icon(icon, color: primaryGreen),
         title: Text(
           title,
-          style: const TextStyle(fontSize: 13),
+          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
         ),
         trailing: const Icon(
           Icons.arrow_forward_ios,
           size: 15,
         ),
-        onTap: () {},
+        onTap: onTap,
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    final postCount = PostRepository.posts.length;
+
     return Scaffold(
       backgroundColor: const Color(0xFFFFFEFC),
 
@@ -115,12 +125,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
 
         actions: [
+          TextButton.icon(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const LoginPage()),
+              );
+            },
+            icon: Icon(Icons.login, size: 16, color: primaryGreen),
+            label: Text('Log In', style: TextStyle(color: primaryGreen, fontWeight: FontWeight.bold)),
+          ),
           IconButton(
             onPressed: openEditProfile,
             icon: Icon(
               Icons.settings_outlined,
               color: primaryGreen,
             ),
+            tooltip: 'Settings / Edit Profile',
           ),
         ],
       ),
@@ -196,12 +217,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
             const SizedBox(height: 25),
 
-            // Profile statistics
+            // Profile statistics (Real and dynamic based on posts, starting at 0)
             Row(
               children: [
-                buildStat("24", "Posts"),
-                buildStat("7", "Events"),
-                buildStat("18", "Completed"),
+                buildStat("$postCount", "Posts"),
+                buildStat("0", "Events"),
+                buildStat("0", "Completed"),
               ],
             ),
 
@@ -212,18 +233,36 @@ class _ProfileScreenState extends State<ProfileScreen> {
               children: [
                 buildAction(
                   Icons.edit_note,
-                  "Share a progress update",
+                  "Share update",
                   lightGreen,
+                  () {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(builder: (_) => const CreatePage()),
+                    );
+                  },
                 ),
                 buildAction(
                   Icons.calendar_today,
-                  "Create an event",
+                  "Create event",
                   lightGreen,
+                  () {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(builder: (_) => const CreatePage()),
+                    );
+                  },
                 ),
                 buildAction(
-                  Icons.menu_book,
-                  "Share what I learned",
+                  Icons.photo_library_outlined,
+                  "Post History",
                   lightGreen,
+                  () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const PostHistoryPage()),
+                    ).then((_) => setState(() {}));
+                  },
                 ),
               ],
             ),
@@ -242,11 +281,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                 ),
 
-                Text(
-                  "View all →",
-                  style: TextStyle(
-                    color: primaryGreen,
-                    fontSize: 12,
+                GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const PostHistoryPage()),
+                    ).then((_) => setState(() {}));
+                  },
+                  child: Text(
+                    "View all →",
+                    style: TextStyle(
+                      color: primaryGreen,
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
               ],
@@ -254,26 +302,85 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
             const SizedBox(height: 12),
 
-            buildPost(
-              Icons.celebration,
-              "My birthday recap",
-              "Had such a lovely birthday with family and close friends.",
-            ),
-
-            buildPost(
-              Icons.fitness_center,
-              "3 weeks of consistency!",
-              "Completed 3 weeks of my routine today.",
-            ),
+            if (PostRepository.posts.isEmpty)
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 16.0),
+                child: Text(
+                  "You haven't posted anything yet.",
+                  style: TextStyle(color: Colors.grey, fontSize: 13),
+                ),
+              )
+            else
+              ...PostRepository.posts.take(2).map((post) => buildPost(
+                    Icons.photo_camera,
+                    'Photo Post',
+                    post.caption,
+                  )),
 
             const SizedBox(height: 15),
 
             // Profile menu
-            buildMenuItem(Icons.grid_view, "My Posts"),
-            buildMenuItem(Icons.bookmark_border, "Saved"),
-            buildMenuItem(Icons.calendar_month, "My Events"),
+            buildMenuItem(Icons.photo_library, "Personal Post History", () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const PostHistoryPage()),
+              ).then((_) => setState(() {}));
+            }),
+            buildMenuItem(Icons.edit, "Edit Profile", openEditProfile),
+            buildMenuItem(Icons.login_rounded, "Log In / Switch Account", () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const LoginPage()),
+              );
+            }),
           ],
         ),
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: 2, // 2 for Profile
+        onTap: (index) {
+          if (index == 0) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (context) => PostsPreviewPage(
+                  controller: PostsController(
+                    storage: const AndroidPostStorage(),
+                    currentUser: const PostAuthor(id: 'u1', name: 'Ananya Sharma'),
+                  ),
+                  sharer: const AndroidPostSharer(),
+                ),
+              ),
+            );
+          } else if (index == 1) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const CreatePage(),
+              ),
+            );
+          }
+        },
+        type: BottomNavigationBarType.fixed,
+        backgroundColor: Colors.white,
+        selectedItemColor: primaryGreen,
+        unselectedItemColor: Colors.grey,
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.feed_outlined),
+            activeIcon: Icon(Icons.feed),
+            label: 'Feed',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.add_box_rounded),
+            label: 'Create',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person_outline),
+            activeIcon: Icon(Icons.person),
+            label: 'Profile',
+          ),
+        ],
       ),
     );
   }
@@ -282,27 +389,31 @@ class _ProfileScreenState extends State<ProfileScreen> {
       IconData icon,
       String title,
       Color color,
+      VoidCallback onTap,
       ) {
     return Expanded(
-      child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 3),
-        padding: const EdgeInsets.all(10),
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          margin: const EdgeInsets.symmetric(horizontal: 3),
+          padding: const EdgeInsets.all(10),
 
-        decoration: BoxDecoration(
-          color: color,
-          borderRadius: BorderRadius.circular(12),
-        ),
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(12),
+          ),
 
-        child: Column(
-          children: [
-            Icon(icon, color: primaryGreen),
-            const SizedBox(height: 5),
-            Text(
-              title,
-              textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 10),
-            ),
-          ],
+          child: Column(
+            children: [
+              Icon(icon, color: primaryGreen),
+              const SizedBox(height: 5),
+              Text(
+                title,
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 10),
+              ),
+            ],
+          ),
         ),
       ),
     );

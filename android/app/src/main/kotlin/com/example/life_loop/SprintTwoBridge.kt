@@ -33,9 +33,15 @@ class SprintTwoBridge(
         when (call.method) {
             "readPosts" -> onDisk(result) {
                 val base = postsFile.baseFile
-                val backup = File(base.path + ".bak")
-                if (!base.exists() && !backup.exists()) null
-                else postsFile.readFully().toString(Charsets.UTF_8)
+                if (!base.exists()) {
+                    return@onDisk null
+                }
+                try {
+                    val bytes = postsFile.readFully()
+                    if (bytes.isEmpty()) null else bytes.toString(Charsets.UTF_8)
+                } catch (_: Exception) {
+                    null
+                }
             }
             "writePosts" -> {
                 val contents = call.argument<String>("contents")

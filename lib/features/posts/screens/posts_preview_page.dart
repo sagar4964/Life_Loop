@@ -8,6 +8,8 @@ import '../services/post_sharer.dart';
 import '../widgets/post_card.dart';
 import 'comments_page.dart';
 import 'create_post_page.dart';
+import '../../../create_page.dart';
+import '../../../view/profile/profile_screen.dart';
 
 /// A small preview runner, not the team's US08 community home feed.
 class PostsPreviewPage extends StatefulWidget {
@@ -80,7 +82,7 @@ class _PostsPreviewPageState extends State<PostsPreviewPage> {
     builder: (context, _) {
       final controller = widget.controller;
       return Scaffold(
-        appBar: AppBar(title: const Text('LifeLoop')),
+        appBar: AppBar(title: const Text('LifeLoop Feed')),
         floatingActionButton: controller.isReady
             ? FloatingActionButton.extended(
                 key: const Key('new-post'),
@@ -208,6 +210,42 @@ class _PostsPreviewPageState extends State<PostsPreviewPage> {
                     ),
             ),
           ),
+        ),
+        bottomNavigationBar: BottomNavigationBar(
+          currentIndex: 0, // Feed
+          onTap: (index) {
+            if (index == 1) {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (_) => const CreatePage()),
+              );
+            } else if (index == 2) {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (_) => const ProfileScreen()),
+              );
+            }
+          },
+          type: BottomNavigationBarType.fixed,
+          backgroundColor: Colors.white,
+          selectedItemColor: Theme.of(context).colorScheme.primary,
+          unselectedItemColor: Colors.grey,
+          items: const [
+            BottomNavigationBarItem(
+              icon: Icon(Icons.feed_outlined),
+              activeIcon: Icon(Icons.feed),
+              label: 'Feed',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.add_box_rounded),
+              label: 'Create',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.person_outline),
+              activeIcon: Icon(Icons.person),
+              label: 'Profile',
+            ),
+          ],
         ),
       );
     },
