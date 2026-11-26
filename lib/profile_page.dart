@@ -3,6 +3,7 @@ import 'edit_profile.dart';
 import 'activity_list_page.dart';
 import 'login_page.dart';
 import 'create_page.dart';
+import 'post_history_page.dart';
 
 class ProfilePage extends StatefulWidget {
   final String fullName;
@@ -24,11 +25,11 @@ class _ProfilePageState extends State<ProfilePage> {
       'I love exploring new places, learning new skills, and creating memorable experiences with friends.';
   List<String> _interests = ['Hiking', 'Photography', 'Music', 'Traveling'];
 
-  // Statistics (interactive numbers)
-  final int _activitiesCreated = 3;
-  final int _activitiesJoined = 5;
-  final int _activitiesCompleted = 2;
-  final int _ongoingActivities = 1;
+  // Statistics (zero and real for new user)
+  final int _activitiesCreated = 0;
+  final int _activitiesJoined = 0;
+  final int _activitiesCompleted = 0;
+  final int _ongoingActivities = 0;
 
   Future<void> _openEditor() async {
     final result = await showModalBottomSheet<ProfileEdits>(
@@ -177,6 +178,30 @@ class _ProfilePageState extends State<ProfilePage> {
                     ),
                   ),
                 ),
+                const SizedBox(height: 10),
+
+                // Personal Post History Button inside profile section
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const PostHistoryPage(),
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.photo_library_outlined, size: 18),
+                    label: const Text('Personal Post History'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: green,
+                      side: const BorderSide(color: green),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: const StadiumBorder(),
+                    ),
+                  ),
+                ),
                 const SizedBox(height: 24),
 
                 // Interests
@@ -231,9 +256,9 @@ class _ProfilePageState extends State<ProfilePage> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => const ActivityListPage(
+                            builder: (context) => ActivityListPage(
                               categoryTitle: 'Activities Created',
-                              count: 3,
+                              count: _activitiesCreated,
                             ),
                           ),
                         );
@@ -247,9 +272,9 @@ class _ProfilePageState extends State<ProfilePage> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => const ActivityListPage(
+                            builder: (context) => ActivityListPage(
                               categoryTitle: 'Activities Joined',
-                              count: 5,
+                              count: _activitiesJoined,
                             ),
                           ),
                         );
@@ -263,9 +288,9 @@ class _ProfilePageState extends State<ProfilePage> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => const ActivityListPage(
+                            builder: (context) => ActivityListPage(
                               categoryTitle: 'Activities Completed',
-                              count: 2,
+                              count: _activitiesCompleted,
                             ),
                           ),
                         );
@@ -279,9 +304,9 @@ class _ProfilePageState extends State<ProfilePage> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => const ActivityListPage(
+                            builder: (context) => ActivityListPage(
                               categoryTitle: 'Ongoing Activities',
-                              count: 1,
+                              count: _ongoingActivities,
                             ),
                           ),
                         );

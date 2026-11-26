@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'profile_page.dart';
+import 'models/post_model.dart';
 
 class CreatePage extends StatefulWidget {
   const CreatePage({super.key});
@@ -26,8 +27,10 @@ class _CreatePageState extends State<CreatePage> {
       return;
     }
 
+    PostRepository.addPost(_captionController.text.trim());
+
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Photo post published successfully!')),
+      const SnackBar(content: Text('Photo post published to your history!')),
     );
     _captionController.clear();
     setState(() {
