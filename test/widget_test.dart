@@ -1,13 +1,11 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:life_loop/main.dart';
+import 'package:lifeloops/create_page.dart';
+import 'package:lifeloops/main.dart';
 
 void main() {
-  testWidgets('LifeLoopApp smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
+  testWidgets('LifeLoop opens the Create page', (tester) async {
     await tester.pumpWidget(const LifeLoopApp());
 
-    // Verify that login screen is shown.
-    expect(find.text('Welcome to LifeLoop'), findsOneWidget);
-    expect(find.text('Log In'), findsOneWidget);
+    expect(find.byType(CreatePage), findsOneWidget);
   });
 }

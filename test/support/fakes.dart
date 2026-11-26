@@ -1,6 +1,6 @@
-import 'package:life_loop/features/posts/data/post_storage.dart';
-import 'package:life_loop/features/posts/models/post.dart';
-import 'package:life_loop/features/posts/services/post_sharer.dart';
+import 'package:lifeloops/features/posts/data/post_storage.dart';
+import 'package:lifeloops/features/posts/models/post.dart';
+import 'package:lifeloops/features/posts/services/post_sharer.dart';
 
 class MemoryPostStorage implements PostStorage {
   String? contents;

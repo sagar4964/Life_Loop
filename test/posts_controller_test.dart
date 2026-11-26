@@ -1,9 +1,9 @@
 import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:life_loop/features/posts/models/post.dart';
-import 'package:life_loop/features/posts/posts_controller.dart';
-import 'package:life_loop/features/posts/services/post_sharer.dart';
+import 'package:lifeloops/features/posts/models/post.dart';
+import 'package:lifeloops/features/posts/posts_controller.dart';
+import 'package:lifeloops/features/posts/services/post_sharer.dart';
 
 import 'support/fakes.dart';
 
